@@ -40,17 +40,16 @@ Due to file size, the dataset is not stored in this repository.
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/CSE-6242-Project.git
-   ```
-2. Navigate to project folder:
-   ```bash
+   git clone https://github.com/lzillmer/CSE-6242-Project.git
    cd CSE-6242-Project
    ```
-3. Install dependencies
+2. Install dependencies
    ```bash
    pip install -r requirements.txt
    ```
-5. Open and run notebook
+3. Download dataset and save it as
    ```bash
-   notebooks/analysis.ipynb
+   data/raw/EMS_Incident_Dispatch_Data.csv
    ```
+4. Open and run notebooks/preprocessing.ipynb (this will generate data/preprocessed/ems_cleaned.csv)
+5. Open and run notebooks/analysis_and_modeling.ipynb
