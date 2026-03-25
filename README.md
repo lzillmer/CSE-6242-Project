@@ -1,1 +1,51 @@
 # CSE-6242-Project
+
+# Impact of Demand Pressure on EMS Response Time
+
+---
+
+## Overview
+
+Emergency medical services (EMS) are designed to respond rapidly to life-threatening emergencies, but high volumes of lower-acuity calls can strain system capacity. In dense urban environments like New York City, this congestion may delay response times for critical emergencies such as cardiac arrest, stroke, and severe trauma.
+
+This project analyzes how demand pressure (call volume), particularly from low-acuity calls, impacts response times for high-priority EMS incidents. We develop statistical models and an interactive tool to simulate how redirecting non-urgent calls could improve emergency response times and reduce disparities across neighborhoods.
+
+---
+
+## Data
+
+- NYC EMS dispatch data (publicly available)
+- Socioeconomic and geographic data for neighborhood-level analysis  
+
+> *Note: Due to file size, raw dataset is not be included in this repository. See instructions below for access.*
+
+---
+
+## Methods
+
+- Data cleaning and preprocessing of EMS dispatch records  
+- Exploratory data analysis to understand call patterns and response times  
+- Statistical modeling to estimate the relationship between call volume and response delay  
+- Scenario simulation to model the impact of redirecting low-acuity calls  
+- Interactive visualization/dashboard for user-driven exploration  
+
+---
+
+## How to Run
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/CSE-6242-Project.git
+   ```
+2. Navigate to project folder:
+   ```bash
+   cd CSE-6242-Project
+   ```
+3. Install dependencies
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. Open and run notebook
+   ```bash
+   notebooks/analysis.ipynb
+   ```
