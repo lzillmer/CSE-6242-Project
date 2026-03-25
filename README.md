@@ -47,9 +47,6 @@ Due to file size, the dataset is not stored in this repository.
    ```bash
    pip install -r requirements.txt
    ```
-3. Download dataset and save it as
-   ```bash
-   data/raw/EMS_Incident_Dispatch_Data.csv
-   ```
+3. Download dataset and save it as data/raw/EMS_Incident_Dispatch_Data.csv
 4. Open and run notebooks/preprocessing.ipynb (this will generate data/preprocessed/ems_cleaned.csv)
 5. Open and run notebooks/analysis_and_modeling.ipynb
