@@ -14,11 +14,10 @@ This project analyzes how demand pressure (call volume), particularly from low-a
 
 ## Data
 
-- NYC EMS dispatch data (publicly available)
-- Socioeconomic and geographic data for neighborhood-level analysis  
+- NYC EMS dispatch data (publicly available):
+https://data.cityofnewyork.us/Public-Safety/EMS-Incident-Dispatch-Data/76xm-jjuj
 
-> *Note: Due to file size, raw dataset is not be included in this repository. See instructions below for access.*
-
+- Socioeconomic and geographic data for neighborhood-level analysis
 ---
 
 ## Methods
@@ -31,7 +30,7 @@ This project analyzes how demand pressure (call volume), particularly from low-a
 
 ---
 
-## How to Run
+## How to run
 
 1. Clone this repository:
    ```bash
