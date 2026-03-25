@@ -19,10 +19,6 @@ https://data.cityofnewyork.us/Public-Safety/EMS-Incident-Dispatch-Data/76xm-jjuj
 
 Due to file size, the dataset is not stored in this repository.
 
-### How to access
-1. Download the dataset from the NYC Open Data portal
-2. Save it in
-
 ---
 
 ## Methods
