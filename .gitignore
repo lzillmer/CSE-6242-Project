@@ -214,3 +214,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# project specific
+data/EMS_Incident_Dispatch_Data.csv
+data/*.parquet
+
