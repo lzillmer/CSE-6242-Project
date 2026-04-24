@@ -7,10 +7,7 @@ import KpiStrip from "./components/KpiStrip";
 
 export default function EMSDashboard() {
   const [borough, setBorough] = useState("All Boroughs");
-  const [diversionRate, setDiversionRate] = useState(0);
-  const [peakHour, setPeakHour] = useState(8);
   const [acuity, setAcuity] = useState("All Priorities");
-  const [equityLayer, setEquityLayer] = useState("None");
 
   const [kpis] = useState([
     { label: "Avg Response Time (High-Acuity)", value: "-", color: "red" },
@@ -53,14 +50,8 @@ export default function EMSDashboard() {
         <Sidebar
           borough={borough}
           setBorough={setBorough}
-          diversionRate={diversionRate}
-          setDiversionRate={setDiversionRate}
-          peakHour={peakHour}
-          setPeakHour={setPeakHour}
           acuity={acuity}
           setAcuity={setAcuity}
-          equityLayer={equityLayer}
-          setEquityLayer={setEquityLayer}
           onRun={handleRun}
         />
 
