@@ -8,7 +8,7 @@ import KpiStrip from "./components/KpiStrip";
 export default function EMSDashboard() {
   const [borough, setBorough] = useState("All Boroughs");
   const [acuity, setAcuity] = useState("All Priorities");
-  const [call_vol, setCall_vol] = useState("Default");
+  const [call_vol, setCall_vol] = useState(100);
 
   const [kpis] = useState([
     { label: "Avg Response Time (High-Acuity)", value: "-", color: "red" },

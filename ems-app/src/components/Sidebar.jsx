@@ -21,7 +21,7 @@ export default function Sidebar({
   const pct = ((call_vol - CALL_VOL_MIN) / (CALL_VOL_MAX - CALL_VOL_MIN)) * 100;
 
   function callVolumeLabel(val) {
-    if (val === CALL_VOL_DEFAULT) return "Default (100%)";
+    if (val === CALL_VOL_DEFAULT) return "";
     return `${val}%`;
   }
 
@@ -82,7 +82,7 @@ export default function Sidebar({
         <div className="sidebar-section-label">Call Volume</div>
         <div className="control-card">
           <div className="control-label">
-            Volume Adjustment
+            Call Volume Adjustment
             <span className="call-vol-value">{call_vol}%</span>
           </div>
           <div className="control-desc">
@@ -101,7 +101,7 @@ export default function Sidebar({
             />
             <div className="slider-ticks">
               <span>{CALL_VOL_MIN}%</span>
-              <span className="slider-tick-mid">Default</span>
+              <span className="slider-tick-mid">{CALL_VOL_DEFAULT}%</span>
               <span>{CALL_VOL_MAX}%</span>
             </div>
           </div>
