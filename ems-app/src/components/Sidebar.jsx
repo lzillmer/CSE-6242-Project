@@ -5,13 +5,26 @@ const SEVERITY_GROUPS = [
   { label: "Group 3", value: "Group 3", levels: [7] },
 ];
 
+const CALL_VOL_MIN = 0;
+const CALL_VOL_MAX = 200;
+const CALL_VOL_DEFAULT = 100;
+
 export default function Sidebar({
   borough,
   setBorough,
   acuity,
   setAcuity,
+  call_vol,
+  setCall_vol,
   onRun,
 }) {
+  const pct = ((call_vol - CALL_VOL_MIN) / (CALL_VOL_MAX - CALL_VOL_MIN)) * 100;
+
+  function callVolumeLabel(val) {
+    if (val === CALL_VOL_DEFAULT) return "Default (100%)";
+    return `${val}%`;
+  }
+
   return (
     <aside>
       <div>
@@ -62,6 +75,44 @@ export default function Sidebar({
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="sidebar-section-label">Call Volume</div>
+        <div className="control-card">
+          <div className="control-label">
+            Volume Adjustment
+            <span className="call-vol-value">{call_vol}%</span>
+          </div>
+          <div className="control-desc">
+            Scale simulated call volume relative to the historical baseline.
+            100% represents the recorded average.
+          </div>
+          <div className="slider-wrap">
+            <input
+              type="range"
+              min={CALL_VOL_MIN}
+              max={CALL_VOL_MAX}
+              value={call_vol}
+              onChange={(e) => setCall_vol(Number(e.target.value))}
+              className="call-vol-slider"
+              style={{ "--pct": `${pct}%` }}
+            />
+            <div className="slider-ticks">
+              <span>{CALL_VOL_MIN}%</span>
+              <span className="slider-tick-mid">Default</span>
+              <span>{CALL_VOL_MAX}%</span>
+            </div>
+          </div>
+          {call_vol !== CALL_VOL_DEFAULT && (
+            <button
+              className="reset-btn"
+              onClick={() => setCall_vol(CALL_VOL_DEFAULT)}
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
 

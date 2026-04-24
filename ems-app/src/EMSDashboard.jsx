@@ -8,6 +8,7 @@ import KpiStrip from "./components/KpiStrip";
 export default function EMSDashboard() {
   const [borough, setBorough] = useState("All Boroughs");
   const [acuity, setAcuity] = useState("All Priorities");
+  const [call_vol, setCall_vol] = useState("Default");
 
   const [kpis] = useState([
     { label: "Avg Response Time (High-Acuity)", value: "-", color: "red" },
@@ -26,10 +27,7 @@ export default function EMSDashboard() {
     // Handle simulation here
     console.log("Run Simuldation", {
       borough,
-      diversionRate,
-      peakHour,
       acuity,
-      equityLayer,
     });
   }
 
@@ -52,6 +50,8 @@ export default function EMSDashboard() {
           setBorough={setBorough}
           acuity={acuity}
           setAcuity={setAcuity}
+          call_vol={call_vol}
+          setCall_vol={setCall_vol}
           onRun={handleRun}
         />
 
