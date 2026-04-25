@@ -5,9 +5,19 @@ const SEVERITY_GROUPS = [
   { label: "Group 3", value: "Group 3", levels: [7] },
 ];
 
+const DIVERSION_GROUPS = [
+  { key: "g1", label: "Group 1", sub: "Levels 1–3" },
+  { key: "g2", label: "Group 2", sub: "Levels 4–6" },
+  { key: "g3", label: "Group 3", sub: "Level 7" },
+];
+
 const CALL_VOL_MIN = 0;
 const CALL_VOL_MAX = 200;
 const CALL_VOL_DEFAULT = 100;
+
+const DIVERSION_MIN = 0;
+const DIVERSION_MAX = 100;
+const DIVERSION_DEFAULT = 0;
 
 export default function Sidebar({
   borough,
@@ -16,6 +26,8 @@ export default function Sidebar({
   setAcuity,
   call_vol,
   setCall_vol,
+  diversion,
+  setDiversion,
   onRun,
 }) {
   const pct = ((call_vol - CALL_VOL_MIN) / (CALL_VOL_MAX - CALL_VOL_MIN)) * 100;
@@ -23,6 +35,21 @@ export default function Sidebar({
   function callVolumeLabel(val) {
     if (val === CALL_VOL_DEFAULT) return "";
     return `${val}%`;
+  }
+
+  function callVolumeLabel(val) {
+    if (val === CALL_VOL_DEFAULT) return "";
+    return `${val}%`;
+  }
+
+  const anyDiversionChanged = DIVERSION_GROUPS.some(
+    (g) => diversion[g.key] !== DIVERSION_DEFAULT,
+  );
+
+  function resetDiversion() {
+    const reset = {};
+    DIVERSION_GROUPS.forEach((g) => (reset[g.key] = DIVERSION_DEFAULT));
+    setDiversion(reset);
   }
 
   return (
@@ -86,8 +113,7 @@ export default function Sidebar({
             <span className="call-vol-value">{call_vol}%</span>
           </div>
           <div className="control-desc">
-            Scale simulated call volume relative to the historical baseline.
-            100% represents the recorded average.
+            Scale simulated call volume relative to the baseline.
           </div>
           <div className="slider-wrap">
             <input
@@ -117,11 +143,62 @@ export default function Sidebar({
       </div>
 
       <div>
+        <div className="sidebar-section-label">Diversion</div>
+        <div className="control-card">
+          <div className="control-label">Diversion Rate by Group</div>
+          <div className="control-desc">
+            Set the percentage of calls diverted away from EMS response for each
+            severity group.
+          </div>
+
+          <div className="diversion-sliders">
+            {DIVERSION_GROUPS.map((g) => {
+              const val = diversion[g.key] ?? DIVERSION_DEFAULT;
+              const divPct =
+                ((val - DIVERSION_MIN) / (DIVERSION_MAX - DIVERSION_MIN)) * 100;
+              return (
+                <div key={g.key} className="diversion-row">
+                  <div className="diversion-row-header">
+                    <div className="diversion-row-labels">
+                      <span className="diversion-group-label">{g.label}</span>
+                      <span className="diversion-group-sub">{g.sub}</span>
+                    </div>
+                    <span className="diversion-value">{val}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={DIVERSION_MIN}
+                    max={DIVERSION_MAX}
+                    step={1}
+                    value={val}
+                    onChange={(e) =>
+                      setDiversion((prev) => ({
+                        ...prev,
+                        [g.key]: Number(e.target.value),
+                      }))
+                    }
+                    className="call-vol-slider"
+                    style={{ "--pct": `${divPct}%` }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {anyDiversionChanged && (
+            <button className="reset-btn" onClick={resetDiversion}>
+              Reset All
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* <div>
         <div className="sidebar-section-label">Actions</div>
         <button className="sim-btn" onClick={onRun}>
           ▶ RUN SIMULATION
         </button>
-      </div>
+      </div> */}
     </aside>
   );
 }

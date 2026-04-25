@@ -5,10 +5,13 @@ import Sidebar from "./components/Sidebar";
 import ChartPanel from "./components/ChartPanel";
 import KpiStrip from "./components/KpiStrip";
 
+const DIVERSION_DEFAULT = { g1: 0, g2: 0, g3: 0 };
+
 export default function EMSDashboard() {
   const [borough, setBorough] = useState("All Boroughs");
   const [acuity, setAcuity] = useState("All Priorities");
   const [call_vol, setCall_vol] = useState(100);
+  const [diversion, setDiversion] = useState(DIVERSION_DEFAULT);
 
   const [kpis] = useState([
     { label: "Avg Response Time (High-Acuity)", value: "-", color: "red" },
@@ -52,6 +55,8 @@ export default function EMSDashboard() {
           setAcuity={setAcuity}
           call_vol={call_vol}
           setCall_vol={setCall_vol}
+          diversion={diversion}
+          setDiversion={setDiversion}
           onRun={handleRun}
         />
 
