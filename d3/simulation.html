@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <script src="lib/d3.v5.min.js"></script>
+    <script src="lib/d3-dsv.min.js"></script>
+    <script src="lib/d3-tip.min.js"></script>
+
+    <style>
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: sans-serif;
+        }
+
+        text {
+            fill: #fff;
+        }
+
+        select,
+        input {
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 4px;
+        }
+
+        label {
+            color: #fff;
+            margin-right: 8px;
+        }
+
+        .control-row {
+            margin: 10px 0;
+        }
+
+        .slider-label {
+            display: inline-block;
+            width: 170px;
+        }
+
+        .value-label {
+            display: inline-block;
+            width: 60px;
+            text-align: right;
+        }
+
+        .axis path,
+        .axis line {
+            stroke: #fff;
+        }
+
+        .grid line {
+            stroke: #444;
+            stroke-opacity: 0.6;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+
+        .d3-tip {
+            line-height: 1.3;
+            padding: 8px;
+            background: #fff;
+            color: #000;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+
+        .axis-label {
+            font-size: 12px;
+            text-anchor: middle;
+        }
+
+        .bar,
+        .response-bar {
+            stroke: #fff;
+            stroke-width: 0.75;
+            opacity: 0.9;
+        }
+
+        .diversion-bar {
+            fill: #31688e;
+        }
+
+        .response-label {
+            font-size: 10px;
+            text-anchor: middle;
+        }
+
+        .bar-label {
+            font-size: 12px;
+            text-anchor: start;
+        }
+
+        .legend-title {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .legend {
+            stroke: #fff;
+        }
+
+        .legend-label {
+            font-size: 11px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="control-row">
+        <label for="dropdown-borough"><strong>Borough:</strong></label>
+        <select id="dropdown-borough"></select>
+    </div>
+
+    <div class="control-row">
+        <label for="dropdown-severity"><strong>Target Call Severity:</strong></label>
+        <select id="dropdown-severity"></select>
+    </div>
+
+    <div class="control-row">
+        <span class="slider-label">Overall Call Volume</span>
+        <input id="slider-vol" type="range" min="0" max="200" step="5">
+        <span id="value-vol" class="value-label"></span>
+    </div>
+
+    <div class="control-row">
+        <span class="slider-label">Critical Diversion</span>
+        <input id="slider-crit" type="range" min="0" max="100" step="5">
+        <span id="value-crit" class="value-label"></span>
+    </div>
+
+    <div class="control-row">
+        <span class="slider-label">Serious Diversion</span>
+        <input id="slider-ser" type="range" min="0" max="100" step="5">
+        <span id="value-ser" class="value-label"></span>
+    </div>
+
+    <div class="control-row">
+        <span class="slider-label">Low-Acuity Diversion</span>
+        <input id="slider-low" type="range" min="0" max="100" step="5">
+        <span id="value-low" class="value-label"></span>
+    </div>
+
+    <script>
+        var width = 1150, height = 1200;
+        var all_rows;
+        var current_row;
+        var borough = "All NYC";
+        var boroughs = ["All NYC", "Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"];
+        var severity = "All";
+        var severities = ["All", "Critical", "Serious", "Low"];
+
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+        var chart1 = svg.append("g")
+            .attr("transform", "translate(90,80)");
+        var chart2 = svg.append("g")
+            .attr("transform", "translate(90,560)");
+        var tip = d3.tip()
+            .attr("class", "d3-tip");
+        svg.call(tip);
+
+        Promise.all([
+            d3.csv("../data/overall_visualization_data.csv", d => load_row(d, "All NYC")),
+            d3.csv("../data/BRONX_visualization_data.csv", d => load_row(d, "Bronx")),
+            d3.csv("../data/BROOKLYN_visualization_data.csv", d => load_row(d, "Brooklyn")),
+            d3.csv("../data/MANHATTAN_visualization_data.csv", d => load_row(d, "Manhattan")),
+            d3.csv("../data/QUEENS_visualization_data.csv", d => load_row(d, "Queens")),
+            d3.csv("../data/RICHMOND___STATEN_ISLAND_visualization_data.csv", d => load_row(d, "Staten Island"))
+        ]).then(d => {
+            all_rows = d.reduce((acc, rows) => acc.concat(rows), []);
+            console.log(all_rows)
+            set_row();
+            dropdowns();
+            sliders(current_row);
+            update();
+        });
+
+        function load_row(d, borough) {
+            severity_map = { "ALL_SEVERITIES_RESP_90TH": "All", "CRITICAL_RESP_90TH": "Critical", "SERIOUS_RESP_90TH": "Serious", "LOW_ACUITY_RESP_90TH": "Low" }
+            s = severity_map[d.Target_Response_Time]
+            return {
+                borough: borough,
+                severity: s,
+                base_response_time: +d.Current_Avg_Wait_Time,
+                crit_vol: +d.Current_Avg_Crit_Vol,
+                ser_vol: +d.Current_Avg_Ser_Vol,
+                low_vol: +d.Current_Avg_Low_Vol,
+                crit_coef: +d.CRITICAL_VOL_Coef,
+                ser_coef: +d.SERIOUS_VOL_Coef,
+                low_coef: +d.LOW_ACUITY_VOL_Coef
+            };
+        }
+
+        function set_row() {
+            current_row = all_rows.find(d => d.borough === borough && d.severity === severity);
+            if (!current_row) { console.error("Missing row for:", borough, severity) }
+        }
+
+        function dropdowns() {
+            var dropdown = d3.select("#dropdown-borough")
+                .on("change", function () {
+                    borough = this.value;
+                    set_row();
+                    sliders(current_row);
+                    update();
+                });
+            dropdown.selectAll("option")
+                .data(boroughs)
+                .enter()
+                .append("option")
+                .attr("value", d => d)
+                .text(d => d);
+            dropdown.property("value", borough);
+
+            var dropdown2 = d3.select("#dropdown-severity")
+                .on("change", function () {
+                    severity = this.value;
+                    set_row();
+                    sliders(current_row);
+                    update();
+                });
+            dropdown2.selectAll("option")
+                .data(severities)
+                .enter()
+                .append("option")
+                .attr("value", d => d)
+                .text(d => d);
+            dropdown2.property("value", severity);
+        }
+
+        function sliders(row) {
+            d3.select("#slider-vol").property("value", 100);
+            d3.select("#slider-crit").property("value", 0);
+            d3.select("#slider-ser").property("value", 0);
+            d3.select("#slider-low").property("value", 0);
+            d3.selectAll("#slider-vol, #slider-crit, #slider-ser, #slider-low").on("input", update);
+        }
+
+        function update() {
+            var settings = {
+                vol_multiplier: +d3.select("#slider-vol").property("value"),
+                crit_diversion: +d3.select("#slider-crit").property("value"),
+                ser_diversion: +d3.select("#slider-ser").property("value"),
+                low_diversion: +d3.select("#slider-low").property("value")
+            }
+
+            d3.select("#value-vol").text(settings.vol_multiplier + "%");
+            d3.select("#value-crit").text(settings.crit_diversion + "%");
+            d3.select("#value-ser").text(settings.ser_diversion + "%");
+            d3.select("#value-low").text(settings.low_diversion + "%");
+
+            simulation_chart(settings);
+            contribution_chart(settings);
+        }
+
+        function simulation_chart(settings) {
+            chart1.selectAll("*").remove();
+            var chart_width = 850, chart_height = 380;
+
+            var rows = [current_row]
+            if (borough === "All NYC") {
+                rows = boroughs.map(b => all_rows.find(d => d.borough === b && d.severity === severity)).filter(d => d);
+            }
+
+            var data = [];
+            rows.forEach(row => {
+                var volumes = calculate_call_volumes(row, settings);
+                data.push({
+                    borough: row.borough,
+                    scenario: "Average Conditions (Baseline)",
+                    value: Math.max(0, row.base_response_time),
+                    value: row.base_response_time
+                });
+                data.push({
+                    borough: row.borough,
+                    scenario: "Volume Scaled Estimate",
+                    value: calculate_estimate(row, volumes.multiplier)
+                });
+                data.push({
+                    borough: row.borough,
+                    scenario: "Post-Diversion Estimate",
+                    value: calculate_estimate(row, volumes.diversion)
+                });
+            });
+
+            var scenarios = ["Average Conditions (Baseline)", "Volume Scaled Estimate", "Post-Diversion Estimate"];
+            var x0 = d3.scaleBand()
+                .domain(rows.map(d => d.borough))
+                .range([0, chart_width])
+                .padding(0.22);
+            var x1 = d3.scaleBand()
+                .domain(scenarios)
+                .range([0, x0.bandwidth()])
+                .padding(0.08);
+            var y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => Math.max(0, d.value)) * 1.15])
+                .nice()
+                .range([chart_height, 0]);
+            var colors = d3.scaleOrdinal()
+                .domain(scenarios)
+                .range(["#440154", "#fde725", "#35b779"]);
+
+            chart1.append("text")
+                .attr("x", chart_width / 2)
+                .attr("y", -35)
+                .attr("class", "chart-title chart-title")
+                .text("Call Volume/Diversion Response Time Simulation");
+
+            chart1.append("g")
+                .attr("class", "grid")
+                .call(d3.axisLeft(y)
+                        .tickSize(-chart_width)
+                        .tickFormat(""));
+
+            chart1.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(0," + chart_height + ")")
+                .call(d3.axisBottom(x0));
+
+            chart1.append("g")
+                .attr("class", "axis")
+                .call(d3.axisLeft(y).tickFormat(d3.format(".0f")));
+
+            chart1.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -chart_height / 2)
+                .attr("y", -55)
+                .attr("class", "axis-label")
+                .text("90th Percentile Response Time (s)");
+
+            chart1.selectAll(".response-bar")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("class", "response-bar")
+                .attr("x", d => x0(d.borough) + x1(d.scenario))
+                .attr("y", d => y(Math.max(0, d.value)))
+                .attr("width", x1.bandwidth())
+                .attr("height", d => chart_height - y(Math.max(0, d.value)))
+                .style("fill", d => colors(d.scenario))
+                .on("mouseover", function (d) {
+                    tip.html("<strong>" + d.borough + "</strong><br/>"
+                        + d.scenario + "<br/>" +
+                        "Estimate: " + d.value.toFixed(1) + "s");
+                    tip.show(d, this);})
+                .on("mouseout", tip.hide);
+
+            chart1.selectAll(".response-label")
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("class", "response-label")
+                .attr("x", d => x0(d.borough) + x1(d.scenario) + x1.bandwidth() / 2)
+                .attr("y", d => y(Math.max(0, d.value)) - 5)
+                .attr("class", "response-label")
+                .text(d => d.value.toFixed(1));
+
+            var legend = chart1.append("g")
+                .attr("transform", "translate(" + (chart_width + 30) + ", 20)");
+
+            legend.append("text")
+                .attr("x", 0)
+                .attr("y", -10)
+                .attr("class", "legend-title")
+                .text("Scenario");
+
+            var item = legend.selectAll(".scenarioLegendItem")
+                .data(scenarios)
+                .enter()
+                .append("g")
+                .attr("class", "scenarioLegendItem")
+                .attr("transform", (d, i) => "translate(0," + (i * 20) + ")");
+
+            item.append("rect")
+                .attr("class", "legend")
+                .attr("width", 12)
+                .attr("height", 12)
+                .style("fill", d => colors(d));
+
+            item.append("text")
+                .attr("x", 18)
+                .attr("y", 10)
+                .attr("class", "legend-label")
+                .text(d => d);
+        }
+
+        function calculate_call_volumes(row, settings) {
+            var multiplier = settings.vol_multiplier / 100;
+            var multiplier_volumes = {
+                critical: row.crit_vol * multiplier,
+                serious: row.ser_vol * multiplier,
+                low: row.low_vol * multiplier
+            };
+            var diversion_volumes = {
+                critical: multiplier_volumes.critical * (1 - settings.crit_diversion / 100),
+                serious: multiplier_volumes.serious * (1 - settings.ser_diversion / 100),
+                low: multiplier_volumes.low * (1 - settings.low_diversion / 100)
+            };
+            return {
+                multiplier: multiplier_volumes,
+                diversion: diversion_volumes
+            };
+        }
+
+        function calculate_estimate(row, volumes) {
+            return row.base_response_time
+                + row.crit_coef * (volumes.critical - row.crit_vol)
+                + row.ser_coef * (volumes.serious - row.ser_vol)
+                + row.low_coef * (volumes.low - row.low_vol);
+        }
+
+        function contribution_chart(settings) {
+            chart2.selectAll("*").remove();
+            var chart_width = 450, chart_height = 340;
+
+            var volumes = calculate_call_volumes(current_row, settings);
+            var contribution_data = [{
+                label: "Critical",
+                coefficient: current_row.crit_coef,
+                multiplier_volume: volumes.multiplier.critical,
+                diversion_volume: volumes.diversion.critical,
+                diverted_calls: volumes.multiplier.critical - volumes.diversion.critical,
+                time_reduction: current_row.crit_coef * (volumes.multiplier.critical - volumes.diversion.critical)
+            },
+            {
+                label: "Serious",
+                coefficient: current_row.ser_coef,
+                multiplier_volume: volumes.multiplier.serious,
+                diversion_volume: volumes.diversion.serious,
+                diverted_calls: volumes.multiplier.serious - volumes.diversion.serious,
+                time_reduction: current_row.ser_coef * (volumes.multiplier.serious - volumes.diversion.serious)
+            },
+            {
+                label: "Low-Acuity",
+                coefficient: current_row.low_coef,
+                multiplier_volume: volumes.multiplier.low,
+                diversion_volume: volumes.diversion.low,
+                diverted_calls: volumes.multiplier.low - volumes.diversion.low,
+                time_reduction: current_row.low_coef * (volumes.multiplier.low - volumes.diversion.low)
+            }];
+
+            var x_axis_max = Math.max(d3.max(contribution_data, d => d.time_reduction), 10);
+            var x = d3.scaleLinear()
+                .domain([0, x_axis_max * 1.5])
+                .nice()
+                .range([0, chart_width]);
+            var y = d3.scaleBand()
+                .domain(contribution_data.map(d => d.label))
+                .range([0, chart_height])
+                .padding(0.3);
+
+            chart2.append("text")
+                .attr("x", chart_width / 2)
+                .attr("y", -35)
+                .attr("class", "chart-title")
+                .text("Contribution of Diversion to Response Time Reduction");
+
+            chart2.append("g")
+                .attr("class", "grid")
+                .attr("transform", "translate(0," + chart_height + ")")
+                .call(d3.axisBottom(x).tickSize(-chart_height).tickFormat(""));
+
+            chart2.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(0," + chart_height + ")")
+                .call(d3.axisBottom(x).tickFormat(d3.format(".0f")));
+
+            chart2.append("g")
+                .attr("class", "axis")
+                .call(d3.axisLeft(y));
+
+            chart2.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -chart_height / 2)
+                .attr("y", -60)
+                .attr("class", "axis-label")
+                .text("Diverted Call Type");
+
+            chart2.selectAll(".bar")
+                .data(contribution_data)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", 0)
+                .attr("y", d => y(d.label))
+                .attr("width", d => x(d.time_reduction))
+                .attr("height", y.bandwidth())
+                .attr("class", "bar diversion-bar")
+                .on("mouseover", function (d) {
+                    tip.html("<strong>" + d.label + " Calls</strong><br/>" +
+                        "Coefficient: " + d.coefficient.toFixed(1) + "s/call<br/>" +
+                        "Calls Diverted/Hour: " + d.diverted_calls.toFixed(1) + "<br/>" +
+                        "Response Time Reduction: " + d.time_reduction.toFixed(1) + "s");
+                    tip.show(d, this);})
+                .on("mouseout", tip.hide);
+
+            chart2.selectAll(".bar-label")
+                .data(contribution_data)
+                .enter()
+                .append("text")
+                .attr("class", "bar-label")
+                .attr("x", d => x(d.time_reduction) + 6)
+                .attr("y", d => y(d.label) + y.bandwidth() / 2 + 4)
+                .attr("class", "bar-label")
+                .text(d => d.time_reduction.toFixed(1) + "s, " + d.diverted_calls.toFixed(1) + " calls diverted/hr");
+
+            chart2.append("text")
+                .attr("x", chart_width / 2)
+                .attr("y", chart_height + 50)
+                .attr("class", "axis-label")
+                .text("90th Percentile Response Time Reduction (s)");
+        }
+    </script>
+
+</body>
+
+</html>

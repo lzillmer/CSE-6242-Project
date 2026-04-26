@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 const SEVERITY_GROUPS = [
   { label: "All", value: "All Levels", levels: [] },
   { label: "Group 1", value: "Group 1", levels: [1, 2, 3] },
@@ -30,12 +32,18 @@ export default function Sidebar({
   setDiversion,
   onRun,
 }) {
-  const pct = ((call_vol - CALL_VOL_MIN) / (CALL_VOL_MAX - CALL_VOL_MIN)) * 100;
+  const [tempCallVol, setTempCallVol] = useState(call_vol);
+  const [tempDiversion, setTempDiversion] = useState(diversion);
 
-  function callVolumeLabel(val) {
-    if (val === CALL_VOL_DEFAULT) return "";
-    return `${val}%`;
-  }
+  useEffect(() => {
+    setTempCallVol(call_vol);
+  }, [call_vol]);
+
+  useEffect(() => {
+    setTempDiversion(diversion);
+  }, [diversion]);
+  
+  const pct = ((tempCallVol - CALL_VOL_MIN) / (CALL_VOL_MAX - CALL_VOL_MIN)) * 100;
 
   function callVolumeLabel(val) {
     if (val === CALL_VOL_DEFAULT) return "";
@@ -49,6 +57,7 @@ export default function Sidebar({
   function resetDiversion() {
     const reset = {};
     DIVERSION_GROUPS.forEach((g) => (reset[g.key] = DIVERSION_DEFAULT));
+    setTempDiversion(reset);
     setDiversion(reset);
   }
 
@@ -106,11 +115,11 @@ export default function Sidebar({
       </div>
 
       <div>
-        <div className="sidebar-section-label">Call Volume</div>
+        <div className="sidebar-section-label">Simulation Call Volume</div>
         <div className="control-card">
           <div className="control-label">
             Call Volume Adjustment
-            <span className="call-vol-value">{call_vol}%</span>
+            <span className="call-vol-value">{tempCallVol}%</span>
           </div>
           <div className="control-desc">
             Scale simulated call volume relative to the baseline.
@@ -120,8 +129,10 @@ export default function Sidebar({
               type="range"
               min={CALL_VOL_MIN}
               max={CALL_VOL_MAX}
-              value={call_vol}
-              onChange={(e) => setCall_vol(Number(e.target.value))}
+              value={tempCallVol}
+              onChange={(e) => setTempCallVol(Number(e.target.value))}
+              onMouseUp={() => setCall_vol(tempCallVol)}
+              //onTouchEnd={() => setCall_vol(tempCallVol)}
               className="call-vol-slider"
               style={{ "--pct": `${pct}%` }}
             />
@@ -134,7 +145,9 @@ export default function Sidebar({
           {call_vol !== CALL_VOL_DEFAULT && (
             <button
               className="reset-btn"
-              onClick={() => setCall_vol(CALL_VOL_DEFAULT)}
+              onClick={() => {
+                setTempCallVol(CALL_VOL_DEFAULT)
+                setCall_vol(CALL_VOL_DEFAULT)}}
             >
               Reset
             </button>
@@ -143,7 +156,7 @@ export default function Sidebar({
       </div>
 
       <div>
-        <div className="sidebar-section-label">Diversion</div>
+        <div className="sidebar-section-label">Simulation Diversion</div>
         <div className="control-card">
           <div className="control-label">Diversion Rate by Group</div>
           <div className="control-desc">
@@ -153,7 +166,7 @@ export default function Sidebar({
 
           <div className="diversion-sliders">
             {DIVERSION_GROUPS.map((g) => {
-              const val = diversion[g.key] ?? DIVERSION_DEFAULT;
+              const val = tempDiversion[g.key] ?? DIVERSION_DEFAULT;
               const divPct =
                 ((val - DIVERSION_MIN) / (DIVERSION_MAX - DIVERSION_MIN)) * 100;
               return (
@@ -172,11 +185,13 @@ export default function Sidebar({
                     step={1}
                     value={val}
                     onChange={(e) =>
-                      setDiversion((prev) => ({
+                      setTempDiversion((prev) => ({
                         ...prev,
                         [g.key]: Number(e.target.value),
                       }))
                     }
+                    onMouseUp={() => setDiversion(tempDiversion)}
+                    //onTouchEnd={() => setDiversion(tempDiversion)}
                     className="call-vol-slider"
                     style={{ "--pct": `${divPct}%` }}
                   />

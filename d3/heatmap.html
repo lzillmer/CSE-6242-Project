@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <script src="lib/d3.v5.min.js"></script>
+    <script src="lib/d3-dsv.min.js"></script>
+    <script src="lib/d3-tip.min.js"></script>
+
+    <style>
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: sans-serif;
+        }
+
+        text {
+            fill: #fff;
+        }
+
+        select {
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 4px;
+            margin-right: 20px;
+        }
+
+        label {
+            color: #fff;
+            margin-right: 6px;
+        }
+
+        .control-row {
+            margin: 10px 0;
+        }
+
+        .axis text {
+            fill: #fff;
+            font-size: 12px;
+        }
+
+        .d3-tip {
+            line-height: 1.3;
+            padding: 8px;
+            background: #fff;
+            color: #000;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Coefficient Heatmap: Call Volume Impact on 90th Percentile Response Time</h2>
+
+    <div class="control-row">
+        <label for="borough-dropdown"><strong>Borough:</strong></label>
+        <select id="borough-dropdown"></select>
+
+        <label for="severity-dropdown"><strong>Target Severity:</strong></label>
+        <select id="severity-dropdown"></select>
+    </div>
+
+    <script>
+        var width = 850;
+        var height = 520;
+        var margin = { top: 80, right: 250, bottom: 80, left: 180 };
+        var chart_width = width - margin.left - margin.right;
+        var chart_height = height - margin.top - margin.bottom;
+
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        var chart = svg.append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var tip = d3.tip()
+            .attr("class", "d3-tip");
+        svg.call(tip);
+
+        var all_rows;
+        var borough = "All NYC";
+        var severity = "All";
+        var boroughs = ["All NYC", "Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"];
+        var severities = ["All", "Low", "Serious", "Critical"];
+
+        var coef_columns = [{ key: "crit_coef", label: "Critical" },
+        { key: "ser_coef", label: "Serious" },
+        { key: "low_coef", label: "Low" }];
+
+        var color = d3.scaleSequential(d3.interpolateViridis);
+
+        Promise.all([
+            d3.csv("../data/overall_visualization_data.csv", d => load_row(d, "All NYC")),
+            d3.csv("../data/BRONX_visualization_data.csv", d => load_row(d, "Bronx")),
+            d3.csv("../data/BROOKLYN_visualization_data.csv", d => load_row(d, "Brooklyn")),
+            d3.csv("../data/MANHATTAN_visualization_data.csv", d => load_row(d, "Manhattan")),
+            d3.csv("../data/QUEENS_visualization_data.csv", d => load_row(d, "Queens")),
+            d3.csv("../data/RICHMOND___STATEN_ISLAND_visualization_data.csv", d => load_row(d, "Staten Island"))
+        ]).then(data => {
+            all_rows = data.reduce((acc, rows) => acc.concat(rows), []);
+            borough_dropdown();
+            severity_dropdown();
+            heatmap();
+        });
+
+        function load_row(d, borough) {
+            severity_map = { "ALL_SEVERITIES_RESP_90TH": "All", "CRITICAL_RESP_90TH": "Critical", "SERIOUS_RESP_90TH": "Serious", "LOW_ACUITY_RESP_90TH": "Low" }
+            s = severity_map[d.Target_Response_Time]
+            return {
+                borough: borough,
+                severity: s,
+                response_90th: +d.Current_Avg_Wait_Time,
+                crit_coef: +d.CRITICAL_VOL_Coef,
+                ser_coef: +d.SERIOUS_VOL_Coef,
+                low_coef: +d.LOW_ACUITY_VOL_Coef
+            };
+        }
+
+        function borough_dropdown() {
+            var dropdown = d3.select("#borough-dropdown")
+                .on("change", function () {
+                    borough = this.value;
+                    heatmap();
+                });
+            dropdown.selectAll("option")
+                .data(boroughs)
+                .enter()
+                .append("option")
+                .attr("value", d => d)
+                .text(d => d);
+            dropdown.property("value", borough);
+        }
+
+        function severity_dropdown() {
+            var dropdown = d3.select("#severity-dropdown")
+                .on("change", function () {
+                    severity = this.value;
+                    heatmap();
+                });
+            dropdown.selectAll("option")
+                .data(severities)
+                .enter()
+                .append("option")
+                .attr("value", d => d)
+                .text(d => d);
+            dropdown.property("value", severity);
+        }
+
+        function heatmap() {
+            chart.selectAll("*").remove();
+            svg.selectAll("#legend").remove();
+            svg.selectAll(".chart-title").remove();
+
+            var rows = all_rows.filter(d => d.borough === borough);
+            if (severity !== "All") {
+                rows = rows.filter(d => d.severity === severity);
+            }
+            rows = rows.sort((a, b) =>
+                severities.indexOf(a.severity) - severities.indexOf(b.severity)
+            );
+
+            var cells = [];
+            rows.forEach(row => {
+                coef_columns.forEach(col => {
+                    cells.push({
+                        borough: row.borough,
+                        severity: row.severity,
+                        volumeType: col.label,
+                        coefficient: row[col.key],
+                        response_90th: row.response_90th
+                    });
+                });
+            });
+
+            var max_coef = d3.max(all_rows, d => d3.max([d.crit_coef, d.ser_coef, d.low_coef]));
+            color.domain([0, max_coef]);
+
+            var x = d3.scaleBand()
+                .domain(rows.map(d => d.severity))
+                .range([0, chart_width])
+                .padding(0.05);
+
+            var y = d3.scaleBand()
+                .domain(coef_columns.map(d => d.label))
+                .range([0, chart_height])
+                .padding(0.05);
+
+            svg.append("text")
+                .attr("class", "chart-title")
+                .attr("x", margin.left + chart_width / 2)
+                .attr("y", 35)
+                .attr("text-anchor", "middle")
+                .style("font-size", "17px")
+                .style("font-weight", "bold")
+                .text("Coefficient Impact Heatmap");
+
+            chart.append("g")
+                .attr("class", "axis")
+                .call(d3.axisLeft(y));
+
+            chart.append("text")
+                .attr("class", "axis-label")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -chart_height / 2)
+                .attr("y", -140)
+                .attr("text-anchor", "middle")
+                .style("font-size", "13px")
+                .style("font-weight", "bold")
+                .text("Call Severity Type");
+
+            chart.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(0," + chart_height + ")")
+                .call(d3.axisBottom(x));
+
+            chart.append("text")
+                .attr("class", "axis-label")
+                .attr("x", chart_width / 2)
+                .attr("y", chart_height + 55)
+                .attr("text-anchor", "middle")
+                .style("font-size", "13px")
+                .style("font-weight", "bold")
+                .text("Predicted Response Time Severity Category");
+
+            chart.selectAll(".heatmap-cell")
+                .data(cells)
+                .enter()
+                .append("rect")
+                .attr("class", "heatmap-cell")
+                .attr("x", d => x(d.severity))
+                .attr("y", d => y(d.volumeType))
+                .attr("width", x.bandwidth())
+                .attr("height", y.bandwidth())
+                .style("fill", d => color(d.coefficient))
+                .style("stroke", "#111")
+                .style("stroke-width", 2)
+                .on("mouseover", function (d) {
+                    tip.html("<strong>" + d.borough + "</strong><br/>" +
+                        "severity: " + d.severity + "<br/>" +
+                        "Volume Type: " + d.volumeType + "<br/>" +
+                        "Coefficient: " + d.coefficient.toFixed(2) + " sec/call<br/>" +
+                        "Baseline 90th Response: " + Math.round(d.response_90th) + " sec");
+                    tip.show(d, this);
+                })
+                .on("mouseout", tip.hide);
+
+            chart.selectAll(".cell-label")
+                .data(cells)
+                .enter()
+                .append("text")
+                .attr("class", "cell-label")
+                .attr("x", d => x(d.severity) + x.bandwidth() / 2)
+                .attr("y", d => y(d.volumeType) + y.bandwidth() / 2 + 4)
+                .attr("text-anchor", "middle")
+                .style("font-size", "12px")
+                .style("font-weight", "bold")
+                .text(d => d.coefficient.toFixed(1));
+
+            var legend_width = 180;
+            var legend_height = 12;
+            var legend = svg.append("g")
+                .attr("id", "legend")
+                .attr("transform", "translate(" + (width - margin.right + 50) + "," + (margin.top + 20) + ")");
+            legend.append("text")
+                .attr("x", 0)
+                .attr("y", -10)
+                .style("font-size", "12px")
+                .style("font-weight", "bold")
+                .text("Coefficient");
+            legend.append("rect")
+                .attr("width", legend_width)
+                .attr("height", legend_height)
+                .style("fill", "url(#coef-gradient)");
+
+            svg.select("linearGradient").remove();
+            var gradient = svg.append("linearGradient")
+                .attr("id", "coef-gradient")
+                .attr("x1", "0%")
+                .attr("x2", "100%")
+                .attr("y1", "0%")
+                .attr("y2", "0%");
+            gradient.selectAll("stop")
+                .data(d3.range(0, 1.01, 0.01))
+                .enter()
+                .append("stop")
+                .attr("offset", d => (d * 100) + "%")
+                .attr("stop-color", d => color(d * max_coef));
+
+            var legend_scale = d3.scaleLinear()
+                .domain([0, max_coef])
+                .range([0, legend_width]);
+
+            var tick_values = d3.range(5).map(i => i * max_coef / 4);
+
+            legend.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(0," + legend_height + ")")
+                .call(
+                    d3.axisBottom(legend_scale)
+                        .tickValues(tick_values)
+                        .tickFormat(d3.format(".1f"))
+                );
+        }
+    </script>
+
+</body>
+
+</html>
