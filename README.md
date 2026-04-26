@@ -48,7 +48,7 @@ Due to file size, the dataset is not stored in this repository.
 6. Download v24.15.0 of node.js from https://nodejs.org/en/download
 7. Navigate to ems-app folder
    ```bash
-   cd .\CSE-6242-Project\ems-app\
+   cd ems-app
    ```
 8. Install node.js dependencies
    ```bash
