@@ -46,7 +46,20 @@ Due to file size, the dataset is not stored in this repository.
 4. Open and run notebooks/parquet_processing.ipynb
 5. Replace output files in ems-app/data/src/data with output files produced from parquet_processing
 6. Download v24.15.0 of node.js from https://nodejs.org/en/download
-7. cd into ems-app
-8. Use "npm install" to load dependencies
-9. Install additional dependencies d3 and d3-tip for node.js (npm install d3, npm install d3-tip)
-10. Use "npm run dev" to launch the app and navigate to http://localhost:5173/ to view
+7. Navigate to ems-app folder
+   ```bash
+   cd .\CSE-6242-Project\ems-app\
+   ```
+8. Install node.js dependencies
+   ```bash
+   npm install
+   ```
+9. If missing, install additional dependencies d3 and d3-tip for node.js
+   ```bash
+   npm install d3
+   npm install d3-tip
+   ```
+10. Launch the app and navigate to http://localhost:5173/ to view
+   ```bash
+   npm run dev
+   ```
