@@ -3,9 +3,10 @@ import "./App.css";
 
 import Sidebar from "./components/Sidebar";
 import ChartPanel from "./components/ChartPanel";
-import { simulation } from "./charts/simulation"
-import { map } from "./charts/map"
-import { heatmap } from "./charts/heatmap"
+import { simulation } from "./charts/simulation";
+import { map } from "./charts/map";
+import { heatmap } from "./charts/heatmap";
+import plusIcon from "./assets/logo.png";
 
 const DIVERSION_DEFAULT = { g1: 0, g2: 0, g3: 0 };
 
@@ -22,44 +23,52 @@ export default function EMSDashboard() {
   useEffect(() => {
     if (!simulationRef.current) return;
     var draw = () => {
-      simulation(simulationRef.current, {borough, acuity, call_vol, diversion});
-    }
-    draw()
-    var observer = new ResizeObserver(draw)
-    observer.observe(simulationRef.current)
-    return () => observer.disconnect()
-  },
-    [borough, acuity, call_vol, diversion]);
+      simulation(simulationRef.current, {
+        borough,
+        acuity,
+        call_vol,
+        diversion,
+      });
+    };
+    draw();
+    var observer = new ResizeObserver(draw);
+    observer.observe(simulationRef.current);
+    return () => observer.disconnect();
+  }, [borough, acuity, call_vol, diversion]);
 
   useEffect(() => {
     if (!mapRef.current) return;
     var draw = () => {
-      map(mapRef.current, {borough, acuity});
-    }
-    draw()
-    var observer = new ResizeObserver(draw)
-    observer.observe(mapRef.current)
-    return () => observer.disconnect()
-  },
-    [borough, acuity]);
+      map(mapRef.current, { borough, acuity });
+    };
+    draw();
+    var observer = new ResizeObserver(draw);
+    observer.observe(mapRef.current);
+    return () => observer.disconnect();
+  }, [borough, acuity]);
 
   useEffect(() => {
     if (!heatmapRef.current) return;
     var draw = () => {
-      heatmap(heatmapRef.current, {borough, acuity});
-    }
-    draw()
-    var observer = new ResizeObserver(draw)
-    observer.observe(heatmapRef.current)
-    return () => observer.disconnect()
-  },
-    [borough, acuity]);
+      heatmap(heatmapRef.current, { borough, acuity });
+    };
+    draw();
+    var observer = new ResizeObserver(draw);
+    observer.observe(heatmapRef.current);
+    return () => observer.disconnect();
+  }, [borough, acuity]);
 
   return (
     <>
       <header className="ems-header">
         <div className="logo-group">
-          <div className="logo-icon"></div>
+          <div className="logo-icon">
+            <img
+              src={plusIcon}
+              alt="+"
+              style={{ width: "20px", height: "20px" }}
+            />
+          </div>
           <div>
             <div className="logo-text">EMS RESPONSE ANALYZER</div>
             <div className="logo-sub">CSE 6242 · TEAM 171</div>
@@ -81,7 +90,6 @@ export default function EMSDashboard() {
         />
 
         <main>
-
           <div className="viz-grid">
             <ChartPanel
               title="Simulated 90th Percentile Response Time with Diversion"
