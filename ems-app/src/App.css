@@ -107,7 +107,7 @@ body {
 aside {
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 12px 12px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   gap: 14px;
