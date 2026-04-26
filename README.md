@@ -32,7 +32,7 @@ Due to file size, the dataset is not stored in this repository.
 ---
 
 ## How to run
-
+Demo Video: https://youtu.be/NB4TbTVfE-c
 1. Clone this repository:
    ```bash
    git clone https://github.com/lzillmer/CSE-6242-Project.git
