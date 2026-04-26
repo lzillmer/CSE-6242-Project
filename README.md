@@ -45,8 +45,8 @@ Due to file size, the dataset is not stored in this repository.
 3. Download dataset and save it as data/raw/EMS_Incident_Dispatch_Data.csv, alternatively skip to step 6 to skip data processing and use saved output files
 4. Open and run notebooks/preprocessing.ipynb (this will generate data/preprocessed/ems_cleaned.csv)
 5. Open and run notebooks/analysis_and_modeling.ipynb
-6. cd into ems-app
-7. Download the latest version of node.js
+6. Download v24.15.0 of node.js from https://nodejs.org/en/download
+7. cd into ems-app
 8. Use "npm install" to load dependencies
 9. Install additional dependencies d3 and d3-tip for node.js (npm install d3, npm install d3-tip)
 10. Use "npm run dev" to launch the app and navigate to http://localhost:5173/ to view
