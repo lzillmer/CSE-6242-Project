@@ -237,53 +237,6 @@ main {
   min-height: 0;
 }
 
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.kpi-cell {
-  padding: 16px 20px;
-  border-right: 1px solid var(--border);
-}
-
-.kpi-cell:last-child {
-  border-right: none;
-}
-
-.kpi-label {
-  font-family: "DM Mono", monospace;
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.kpi-value {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--text);
-}
-
-.kpi-value.red {
-  color: var(--accent);
-}
-
-.kpi-value.amber {
-  color: var(--accent2);
-}
-
-.kpi-delta {
-  font-family: "DM Mono", monospace;
-  font-size: 9px;
-  color: var(--muted);
-  margin-top: 4px;
-}
-
 .viz-grid {
   flex: 1;
   display: grid;
