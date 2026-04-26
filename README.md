@@ -45,7 +45,7 @@ Due to file size, the dataset is not stored in this repository.
 3. Download dataset (see "Data" above) and save it as data/raw/EMS_Incident_Dispatch_Data.csv, alternatively skip to step 6 to skip data processing and use saved output files
 4. Open and run notebooks/parquet_processing.ipynb
 5. Replace output files in ems-app/data/src/data with output files produced from parquet_processing
-6. Download v24.15.0 of node.js from https://nodejs.org/en/download
+6. Download v24.15.0 of node.js from https://nodejs.org/en/download, select option to "Automatically install necessary tools" (not default)
 7. Navigate to ems-app folder
    ```bash
    cd ems-app
