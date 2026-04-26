@@ -60,6 +60,7 @@ Due to file size, the dataset is not stored in this repository.
    npm install d3-tip
    ```
 10. Launch the app and navigate to http://localhost:5173/ to view
-      ```bash
+   ```bash
    npm run dev
    ```
+
