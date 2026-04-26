@@ -54,12 +54,7 @@ Due to file size, the dataset is not stored in this repository.
    ```bash
    npm install
    ```
-9. If missing, install additional dependencies d3 and d3-tip for node.js
-   ```bash
-   npm install d3
-   npm install d3-tip
-   ```
-10. Launch the app and navigate to http://localhost:5173/ to view
+9. Launch the app and navigate to http://localhost:5173/ to view
    ```bash
    npm run dev
    ```
